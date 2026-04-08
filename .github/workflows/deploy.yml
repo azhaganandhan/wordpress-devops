@@ -1,0 +1,52 @@
+name: CI/CD WordPress to Lightsail
+
+on:
+  push:
+    branches:
+      - main-test
+
+env:
+  LIGHTSAIL_HOST: ${{ secrets.LIGHTSAIL_HOST }}
+  LIGHTSAIL_USER: ${{ secrets.LIGHTSAIL_USER }}
+  SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+jobs:
+  build-test-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # 🐳 Install Docker
+      - name: Set up Docker
+        uses: docker/setup-buildx-action@v3
+
+      # 🧪 Run Tests
+      - name: Run Docker Compose Test
+        run: |
+          chmod +x ./scripts/test.sh
+          ./scripts/test.sh
+
+      # 🔐 Setup SSH
+      - name: Setup SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $LIGHTSAIL_HOST >> ~/.ssh/known_hosts
+
+      # 📦 Copy files to Lightsail
+      - name: Copy Files to Server
+        run: |
+          scp -r . $LIGHTSAIL_USER@$LIGHTSAIL_HOST:/home/$LIGHTSAIL_USER/wordpress-app
+
+      # 🚀 Deploy on Lightsail
+      - name: Deploy Application
+        run: |
+          ssh $LIGHTSAIL_USER@$LIGHTSAIL_HOST << 'EOF'
+            cd wordpress-app
+            docker-compose down || true
+            docker-compose pull
+            docker-compose up -d --build
+          EOF
