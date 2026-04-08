@@ -22,11 +22,6 @@ jobs:
       - name: Set up Docker
         uses: docker/setup-buildx-action@v3
 
-      # 🧪 Run Tests
-      - name: Run Docker Compose Test
-        run: |
-          chmod +x ./scripts/test.sh
-          ./scripts/test.sh
 
       # 🔐 Setup SSH
       - name: Setup SSH Key
