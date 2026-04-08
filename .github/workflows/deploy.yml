@@ -3,7 +3,7 @@ name: CI/CD WordPress to Lightsail
 on:
   push:
     branches:
-      - main-test
+      - main
 
 env:
   LIGHTSAIL_HOST: ${{ secrets.LIGHTSAIL_HOST }}
