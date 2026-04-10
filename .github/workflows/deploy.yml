@@ -39,7 +39,12 @@ jobs:
       # 📦 Copy files to Lightsail
       - name: Copy Files to Server
         run: |
-          scp -r . $LIGHTSAIL_USER@$LIGHTSAIL_HOST:wordpress-app
+          ssh $LIGHTSAIL_USER@$LIGHTSAIL_HOST "mkdir -p /home/$LIGHTSAIL_USER/wordpress-app"
+          rsync -az --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'node_modules/' \
+            ./ $LIGHTSAIL_USER@$LIGHTSAIL_HOST:/home/$LIGHTSAIL_USER/wordpress-app/
 
       # 🚀 Deploy on Lightsail
       - name: Deploy Application
@@ -51,3 +56,4 @@ jobs:
             docker-compose up -d --build
           EOF
 
+          
